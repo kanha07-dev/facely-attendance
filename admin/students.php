@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once 'config/config.php';
+require_once __DIR__ . '/../config/config.php';
 
 try {
     $result = $conn->query("SELECT id, name, roll_no, stream, photoUrl FROM face_students");

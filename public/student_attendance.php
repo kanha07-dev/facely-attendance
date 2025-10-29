@@ -3,19 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance - Facely</title>
+    <title>My Attendance - ABIT</title>
+    <link rel="icon" href="../img/abit-logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <?php include 'navbar.php'; ?>
+    <?php
+    session_start();
+    if (!isset($_SESSION['student_id'])) {
+        header('Location: ../auth/login.php');
+        exit;
+    }
+    include '../includes/navbar.php'; ?>
 
     <div class="container mt-4">
-        <h1>Attendance</h1>
-        <table class="table table-striped">
+        <h1>My Attendance</h1>
+        <div class="table-responsive">
+            <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Student Name</th>
-                    <th>Roll No</th>
+                    <th>Date</th>
                     <th>Time</th>
                     <th>Status</th>
                 </tr>
@@ -23,7 +30,8 @@
             <tbody id="attendance-data">
                 <!-- Data will be loaded here by JavaScript -->
             </tbody>
-        </table>
+            </table>
+        </div>
     </div>
 
     <script>
@@ -32,8 +40,12 @@
             .then(data => {
                 const tbody = document.getElementById('attendance-data');
                 let rows = '';
+                const studentId = <?php echo $_SESSION['student_id']; ?>;
                 for (const record of data) {
-                    rows += `<tr><td>${record.name}</td><td>${record.roll_no}</td><td>${new Date(record.timestamp).toLocaleString()}</td><td>${record.status}</td></tr>`;
+                    if (record.student_id === studentId) {
+                        const date = new Date(record.timestamp);
+                        rows += `<tr><td>${date.toLocaleDateString()}</td><td>${date.toLocaleTimeString()}</td><td>${record.status}</td></tr>`;
+                    }
                 }
                 tbody.innerHTML = rows;
             });

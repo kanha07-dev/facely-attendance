@@ -1,0 +1,14 @@
+RewriteEngine On
+
+# Don't rewrite admin, assets, models, includes, config, or utils folders
+RewriteCond %{REQUEST_URI} !^/admin
+RewriteCond %{REQUEST_URI} !^/assets
+RewriteCond %{REQUEST_URI} !^/models
+RewriteCond %{REQUEST_URI} !^/includes
+RewriteCond %{REQUEST_URI} !^/config
+RewriteCond %{REQUEST_URI} !^/utils
+
+# Rewrite everything else to public/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/$1 [L]

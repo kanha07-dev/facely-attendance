@@ -3,38 +3,43 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require_once 'config/config.php';
+require_once __DIR__ . '/../config/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name']);
     $roll_no = trim($_POST['roll_no']);
     $stream = trim($_POST['stream']);
+    $password = trim($_POST['password']);
     $photo = $_FILES['photo'];
     $maxFileSize = 2 * 1024 * 1024; // 2MB
 
     if (empty($name)) {
-        header('Location: admin.php?status=error&message=' . urlencode('Student name cannot be empty.'));
+        header('Location: ../admin/index.php?status=error&message=' . urlencode('Student name cannot be empty.'));
         exit;
     }
     if (empty($roll_no)) {
-        header('Location: admin.php?status=error&message=' . urlencode('Roll No cannot be empty.'));
+        header('Location: ../admin/index.php?status=error&message=' . urlencode('Roll No cannot be empty.'));
         exit;
     }
     if (empty($stream)) {
-        header('Location: admin.php?status=error&message=' . urlencode('Stream cannot be empty.'));
+        header('Location: ../admin/index.php?status=error&message=' . urlencode('Stream cannot be empty.'));
+        exit;
+    }
+    if (empty($password)) {
+        header('Location: ../admin/index.php?status=error&message=' . urlencode('Password cannot be empty.'));
         exit;
     }
 
     if (isset($photo) && $photo['size'] > $maxFileSize) {
-        header('Location: admin.php?status=error&message=' . urlencode('File is too large. Please upload a file smaller than 2MB.'));
+        header('Location: ../admin/index.php?status=error&message=' . urlencode('File is too large. Please upload a file smaller than 2MB.'));
         exit;
     }
 
     if (isset($photo) && $photo['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = 'uploads/';
+        $uploadDir = '../img/uploads/';
         if (!is_dir($uploadDir)) {
             if (!mkdir($uploadDir, 0777, true)) {
-                header('Location: admin.php?status=error&message=Failed to create upload directory.');
+                header('Location: ../admin/index.php?status=error&message=Failed to create upload directory.');
                 exit;
             }
         }
@@ -51,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->store_result();
 
             if ($stmt->num_rows > 0) {
-                header('Location: admin.php?status=error&message=' . urlencode('A student with this Roll No already exists.'));
+                header('Location: ../admin/index.php?status=error&message=' . urlencode('A student with this Roll No already exists.'));
                 unlink($uploadFilePath);
                 $stmt->close();
                 $conn->close();
@@ -59,13 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $stmt->close();
 
-            $stmt = $conn->prepare("INSERT INTO face_students (name, roll_no, stream, photoUrl) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", $name, $roll_no, $stream, $uploadFilePath);
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $conn->prepare("INSERT INTO face_students (name, roll_no, stream, photoUrl, password) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssss", $name, $roll_no, $stream, $uploadFilePath, $hashedPassword);
 
             if ($stmt->execute()) {
-                header('Location: admin.php?status=success');
+                header('Location: ../admin/index.php?status=success');
             } else {
-                header('Location: admin.php?status=error&message=' . urlencode('Database error: ' . $stmt->error));
+                header('Location: ../admin/index.php?status=error&message=' . urlencode('Database error: ' . $stmt->error));
                 unlink($uploadFilePath);
             }
 
@@ -85,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         UPLOAD_ERR_EXTENSION  => 'A PHP extension stopped the file upload.',
     ];
     $error_message = isset($photo['error']) ? $upload_errors[$photo['error']] : 'Unknown upload error.';
-    header('Location: admin.php?status=error&message=' . urlencode($error_message));
+    header('Location: ../admin/index.php?status=error&message=' . urlencode($error_message));
     exit;
 }
 ?>
